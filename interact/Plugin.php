@@ -20,6 +20,9 @@ class Plugin extends BasePlugin
 
     public function setContainer(Container $container)
     {
+        trigger_error('console_dialog_helper is no longer a property of container. This needs to be refactored', E_USER_ERROR);
+        die();
+
         $container->method(
             'ask',
             function($container, $q, $default = null) {
