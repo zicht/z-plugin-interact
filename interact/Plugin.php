@@ -5,6 +5,8 @@
  */
 namespace Zicht\Tool\Plugin\Interact;
 
+use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Zicht\Tool\Plugin as BasePlugin;
 use \Zicht\Tool\Container\Container;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -20,13 +22,12 @@ class Plugin extends BasePlugin
 
     public function setContainer(Container $container)
     {
-        trigger_error('console_dialog_helper is no longer a property of container. This needs to be refactored', E_USER_ERROR);
-        die();
+        $helper = new DialogHelper();
 
         $container->method(
             'ask',
-            function($container, $q, $default = null) {
-                return $container->console_dialog_helper->ask(
+            function($container, $q, $default = null) use($helper) {
+                return $helper->ask(
                     $container->output,
                     $q . ($default ? sprintf(' [<info>%s</info>]', $default) : '') . ': ',
                     $default
@@ -35,12 +36,12 @@ class Plugin extends BasePlugin
         );
         $container->method(
             'choose',
-            function($container, $q, $options) {
+            function($container, $q, $options) use($helper) {
                 foreach ($options as $key => $option) {
                     $container->output->writeln(sprintf('[<info>%s</info>] %s', $key, $option));
                 }
 
-                return $container->console_dialog_helper->askAndValidate(
+                return $helper->askAndValidate(
                     $container->output,
                     "$q: ",
                     function($value) use($options) {
@@ -55,8 +56,8 @@ class Plugin extends BasePlugin
 
         $container->method(
             'confirm',
-            function($container, $q, $default = false) {
-                return $container->console_dialog_helper->askConfirmation(
+            function($container, $q, $default = false) use($helper) {
+                return $helper->askConfirmation(
                     $container->output,
                     $q .
                         ($default === false ? ' [y/N] ' : ' [Y/n]'),
