@@ -68,4 +68,3 @@ Hello gerard, my name is Linux
 ```
 
 # Maintainer(s)
-* Philip Bergman <philip@zicht.nl>
