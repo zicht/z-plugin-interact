@@ -68,3 +68,4 @@ Hello gerard, my name is Linux
 ```
 
 # Maintainer(s)
+* Jochem Klaver <jochem@zicht.nl>
