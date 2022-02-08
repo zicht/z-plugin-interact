@@ -1,68 +1,53 @@
 <?php
 /**
- * @author Gerard van Helden <gerard@zicht.nl>
- * @copyright Zicht online <http://zicht.nl>
+ * @copyright Zicht Online <https://zicht.nl>
  */
+
 namespace Zicht\Tool\Plugin\Interact;
 
-use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
+use Symfony\Component\Console\Question\Question;
+use Zicht\Tool\Container\Container;
 use Zicht\Tool\Plugin as BasePlugin;
-use \Zicht\Tool\Container\Container;
-use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 /**
  * Provides utilities to interact with the user.
  */
 class Plugin extends BasePlugin
 {
-    public function appendConfiguration(ArrayNodeDefinition $rootNode)
-    {
-    }
-
     public function setContainer(Container $container)
     {
-        $helper = new DialogHelper();
+        $helper = new QuestionHelper();
+        $input = new ArgvInput();
+        $input->setInteractive((bool)$container->get('INTERACTIVE'));
 
         $container->method(
             'ask',
-            function($container, $q, $default = null) use($helper) {
-                return $helper->ask(
-                    $container->output,
-                    $q . ($default ? sprintf(' [<info>%s</info>]', $default) : '') . ': ',
-                    $default
-                );
+            function ($container, $question, $default = null) use ($helper, $input) {
+                $questionObj = new Question($question . ($default ? sprintf(' [<info>%s</info>]', $default) : '') . ': ', $default);
+                return $helper->ask($input, $container->output, $questionObj);
             }
         );
         $container->method(
             'choose',
-            function($container, $q, $options) use($helper) {
+            function ($container, $question, $options) use ($helper, $input) {
                 foreach ($options as $key => $option) {
                     $container->output->writeln(sprintf('[<info>%s</info>] %s', $key, $option));
                 }
 
-                return $helper->askAndValidate(
-                    $container->output,
-                    "$q: ",
-                    function($value) use($options) {
-                        if (!array_key_exists($value, $options)) {
-                            throw new \InvalidArgumentException("Invalid option [$value]");
-                        }
-                        return $options[$value];
-                    }
-                );
+                $choiceQuestion = new ChoiceQuestion($question . ': ', $options);
+                return $helper->ask($input, $container->output, $choiceQuestion);
             }
         );
 
         $container->method(
             'confirm',
-            function($container, $q, $default = false) use($helper) {
-                return $helper->askConfirmation(
-                    $container->output,
-                    $q .
-                        ($default === false ? ' [y/N] ' : ' [Y/n]'),
-                    $default
-                );
+            function ($container, $question, $default = false) use ($helper, $input) {
+                $confirmationQuestion = new ConfirmationQuestion($question . ($default === false ? ' [y/N] ' : ' [Y/n]'), $default);
+                return $helper->ask($input, $container->output, $confirmationQuestion);
             }
         );
     }
